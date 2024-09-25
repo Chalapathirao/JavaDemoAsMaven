@@ -13,47 +13,56 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class RunAsyncDemo {
+
     public Void saveEmployees(File jsonFile) throws ExecutionException, InterruptedException {
         ObjectMapper mapper = new ObjectMapper();
-        CompletableFuture<Void> runAsyncCompletableFuture = CompletableFuture.runAsync(new Runnable() {
+        CompletableFuture<Void> runAsyncFuture = CompletableFuture.runAsync(new Runnable() {
+
             @Override
             public void run() {
                 try {
-                    List<Employee> employees = mapper.readValue(jsonFile, new TypeReference<List<Employee>>() {
-                    });
-                    //write logic to save list of employee object
-                    System.out.println("Thread: " + Thread.currentThread().getName());
-                    //employees.forEach(System.out::println);
+                    List<Employee> employees = mapper
+                            .readValue(jsonFile, new TypeReference<List<Employee>>() {
+                            });
+                    //write logic t save list of employee to database
+                    //repository.saveAll(employees);
+                    System.out.println("Thread : " + Thread.currentThread().getName());
                     System.out.println(employees.size());
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
             }
         });
-        return runAsyncCompletableFuture.get();
+
+        return runAsyncFuture.get();
     }
 
-    public Void saveEmployeesWithLamda(File jsonFile) throws ExecutionException, InterruptedException {
+
+    public Void saveEmployeesWithCustomExecutor(File jsonFile) throws ExecutionException, InterruptedException {
         ObjectMapper mapper = new ObjectMapper();
-        Executor executor= Executors.newFixedThreadPool(10);
-        CompletableFuture<Void> runAsyncCompletableFuture = CompletableFuture.runAsync(() -> {
-            try {
-                List<Employee> employees = mapper.readValue(jsonFile, new TypeReference<List<Employee>>() {
-                });
-                //write logic to save list of employee object
-                System.out.println("Thread: " + Thread.currentThread().getName());
-               // employees.forEach(System.out::println);
-                System.out.println(employees.size());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }, executor);
-        return runAsyncCompletableFuture.get();
+        Executor executor = Executors.newFixedThreadPool(5);
+        CompletableFuture<Void> runAsyncFuture = CompletableFuture.runAsync(
+                () -> {
+                    try {
+                        List<Employee> employees = mapper
+                                .readValue(jsonFile, new TypeReference<List<Employee>>() {
+                                });
+                        //write logic t save list of employee to database
+                        //repository.saveAll(employees);
+                        System.out.println("Thread : " + Thread.currentThread().getName());
+                        System.out.println(employees.size());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                },executor);
+
+        return runAsyncFuture.get();
     }
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         RunAsyncDemo runAsyncDemo = new RunAsyncDemo();
-        System.out.println(runAsyncDemo.saveEmployees(new File("employees.json")));
-        runAsyncDemo.saveEmployeesWithLamda(new File("employees.json"));
+        runAsyncDemo.saveEmployees(new File("employees.json"));
+        runAsyncDemo.saveEmployeesWithCustomExecutor(new File("employees.json"));
+
     }
 }
