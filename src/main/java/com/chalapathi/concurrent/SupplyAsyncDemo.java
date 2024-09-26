@@ -24,6 +24,5 @@ public class SupplyAsyncDemo {
         SupplyAsyncDemo supplyAsyncDemo = new SupplyAsyncDemo();
         List<Employee> employees = supplyAsyncDemo.getEmployees();
         employees.forEach(System.out::println);
-
     }
 }
